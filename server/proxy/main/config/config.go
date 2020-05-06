@@ -131,15 +131,15 @@ type ConfigConnectCredentials struct {
 }
 
 type ConfigProxy struct {
-	Bind           string             `yaml:"bind"`
-	Routes         []ConfigProxyRoute `yaml:"routes"`
-	routes         map[string]ConfigProxyRoute
-	Locale         ConfigProxyLocale `yaml:"locale"`
-	Motd           string            `yaml:"motd"`
-	MaxPlayers     uint16            `yaml:"maxPlayers"`
-	SyncMaxPlayers bool              `yaml:"syncMaxPlayers"`
-	Authenticate   bool              `yaml:"authenticate"`
-	KickRegex      string            `yaml:"kickRegex"`
+	Bind               string             `yaml:"bind"`
+	Routes             []ConfigProxyRoute `yaml:"routes"`
+	routes             map[string]ConfigProxyRoute
+	Locale             ConfigProxyLocale `yaml:"locale"`
+	Motd               string            `yaml:"motd"`
+	MaxPlayers         uint16            `yaml:"maxPlayers"`
+	SyncMaxPlayers     bool              `yaml:"syncMaxPlayers"`
+	Authenticate       bool              `yaml:"authenticate"`
+	FallbackRegexMatch string            `yaml:"fallbackRegexMatch"`
 }
 
 type ConfigProxyLocale struct {
@@ -186,10 +186,10 @@ func DefaultConfig() (config *Config) {
 			LostConn: "Lost connection... Please try to reconnect",
 			Shutdown: "The server is being restarted. Please try to reconnect",
 		},
-		Motd:         "A LilyPad Server",
-		MaxPlayers:   1,
-		Authenticate: true,
-		KickRegex:    "(?i)(reconnect)|(reboot)|(full)|(offline)",
+		Motd:               "A LilyPad Server",
+		MaxPlayers:         1,
+		Authenticate:       true,
+		FallbackRegexMatch: "(?i)(reconnect)|(reboot)|(full)|(offline)",
 	}
 	return
 }

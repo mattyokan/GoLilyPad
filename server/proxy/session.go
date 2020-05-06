@@ -269,7 +269,7 @@ func (this *Session) Disconnect(reason ...string) {
 
 func (this *Session) DisconnectJson(args ...string) {
 	json := args[0]
-	if len(args) == 2 && this.server.regex.MatchString(json) {
+	if len(args) == 2 && this.server.fallbackRegex.MatchString(json) {
 		servers := this.server.router.Route(this.serverAddress)
 		activeServers := []string{}
 		currentServer := args[1]
