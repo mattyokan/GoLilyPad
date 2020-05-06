@@ -269,30 +269,24 @@ func (this *Session) Disconnect(reason ...string) {
 
 func (this *Session) DisconnectJson(args ...string) {
 	json := args[0]
-	fmt.Println("Json message is " + json)
 	if len(args) == 2 && this.server.regex.MatchString(json) {
 		servers := this.server.router.Route(this.serverAddress)
 		activeServers := []string{}
 		currentServer := args[1]
-		fmt.Println("Attempting to reroute user from server " + currentServer)
 		for _, serverName := range servers {
 			if serverName == currentServer || !this.server.connect.HasServer(serverName) {
 				continue
 			}
 			activeServers = append(activeServers, serverName)
 		}
-		fmt.Printf("There are %d servers to connect to.", len(activeServers))
 		if len(activeServers) >= 1 {
 			serverName := activeServers[RandomInt(len(activeServers))]
 			server := this.server.connect.Server(serverName)
-			fmt.Printf(" Out of these, connecting to " + serverName)
 			if server != nil {
 				this.Redirect(server)
 				return
 			}
 		}
-	} else {
-		fmt.Println("Args length 1")
 	}
 	if this.protocol != nil {
 		registry := this.pipeline.Get("registry")
