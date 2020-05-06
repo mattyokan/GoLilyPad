@@ -35,12 +35,12 @@ func (this *apiSession) Profile() (name string, uuid uuid.UUID) {
 	return this.session.name, this.session.uuid
 }
 
-func (this *apiSession) Disconnect(reason string) {
-	this.session.Disconnect(reason)
+func (this *apiSession) Disconnect(reason ...string) {
+	this.session.Disconnect(reason...)
 }
 
-func (this *apiSession) DisconnectJson(json string) {
-	this.session.DisconnectJson(json)
+func (this *apiSession) DisconnectJson(json ...string) {
+	this.session.DisconnectJson(json...)
 }
 
 func (this *apiSession) Remote() (ip string, port string) {

@@ -34,8 +34,8 @@ type Session interface {
 	Write(packet.Packet, PacketSubject)
 	Pipeline() *packet.PacketPipeline
 	Profile() (name string, uuid uuid.UUID)
-	Disconnect(reason string)
-	DisconnectJson(json string)
+	Disconnect(reason ...string)
+	DisconnectJson(json ...string)
 	Remote() (ip string, port string)
 	RemoteOverride(ip string, port string)
 	State() SessionState

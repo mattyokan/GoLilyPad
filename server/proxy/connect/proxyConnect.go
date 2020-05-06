@@ -1,6 +1,7 @@
 package connect
 
 import (
+	"fmt"
 	clientConnect "github.com/LilyPad/GoLilyPad/client/connect"
 	packetConnect "github.com/LilyPad/GoLilyPad/packet/connect"
 	uuid "github.com/satori/go.uuid"
@@ -131,6 +132,19 @@ func (this *ProxyConnect) QueryRemotePlayers() {
 func (this *ProxyConnect) Server(name string) (val *Server) {
 	this.serversMutex.RLock()
 	val, _ = this.servers[name]
+	this.serversMutex.RUnlock()
+	return
+}
+
+func (this *ProxyConnect) ServerByAddress(address string) (val *Server) {
+	this.serversMutex.RLock()
+	fmt.Println("Attempting to find server with address " + address)
+	for _, value := range this.servers {
+		fmt.Println("Server " + value.Name + " has address " + value.Addr + " and security key " + value.SecurityKey)
+		if value.Addr == address {
+			val = value
+		}
+	}
 	this.serversMutex.RUnlock()
 	return
 }

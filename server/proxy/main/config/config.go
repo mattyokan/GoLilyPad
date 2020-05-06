@@ -139,6 +139,7 @@ type ConfigProxy struct {
 	MaxPlayers     uint16            `yaml:"maxPlayers"`
 	SyncMaxPlayers bool              `yaml:"syncMaxPlayers"`
 	Authenticate   bool              `yaml:"authenticate"`
+	KickRegex      string            `yaml:"kickRegex"`
 }
 
 type ConfigProxyLocale struct {
@@ -188,6 +189,7 @@ func DefaultConfig() (config *Config) {
 		Motd:         "A LilyPad Server",
 		MaxPlayers:   1,
 		Authenticate: true,
+		KickRegex:    "(?i)(reconnect)|(reboot)|(full)|(offline)",
 	}
 	return
 }

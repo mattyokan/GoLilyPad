@@ -148,7 +148,7 @@ func (this *Session) Redirect(server *connect.Server) {
 	if err != nil {
 		fmt.Println("Proxy server, name:", this.name, "ip:", this.remoteIp, "failed to redirect:", server.Name, "err:", err)
 		if this.Initializing() {
-			this.Disconnect("Error: Outbound Connection Mismatch")
+			this.Disconnect("Error: Outbound Connection Mismatch", server.Name)
 		}
 		return
 	}
@@ -168,10 +168,6 @@ func (this *Session) SetAuthenticated(result bool) {
 	}
 	if this.server.sessionRegistry.HasUuid(this.uuid) {
 		this.Disconnect(minecraft.Colorize(this.server.localizer.LocaleLoggedIn()))
-		return
-	}
-	if this.server.MaxPlayers() > 1 && this.server.sessionRegistry.Len() >= int(this.server.MaxPlayers()) {
-		this.Disconnect(minecraft.Colorize(this.server.localizer.LocaleFull()))
 		return
 	}
 
@@ -204,12 +200,16 @@ func (this *Session) SetAuthenticated(result bool) {
 		this.Disconnect("Error: Outbound Server Mismatch: " + serverName)
 		return
 	}
+	if this.server.MaxPlayers() > 1 && this.server.sessionRegistry.Len() >= int(this.server.MaxPlayers()) { // Had to move this down here so we don't need to kick the user if they try to join a full server.
+		this.Disconnect(minecraft.Colorize(this.server.localizer.LocaleFull()), server.Name)
+		return
+	}
 	addResult := this.server.connect.AddLocalPlayer(this.name, this.uuid)
 	if addResult == 0 {
-		this.Disconnect(minecraft.Colorize(this.server.localizer.LocaleLoggedIn()))
+		this.Disconnect(minecraft.Colorize(this.server.localizer.LocaleLoggedIn()), server.Name)
 		return
 	} else if addResult == -1 {
-		this.Disconnect(minecraft.Colorize(this.server.localizer.LocaleLoggedIn()))
+		this.Disconnect(minecraft.Colorize(this.server.localizer.LocaleLoggedIn()), server.Name)
 		return
 	}
 	this.SetState(STATE_INIT)
@@ -261,12 +261,39 @@ func (this *Session) SetCompression(threshold int) {
 	}
 }
 
-func (this *Session) Disconnect(reason string) {
-	reasonJson, _ := json.Marshal(reason)
-	this.DisconnectJson("{\"text\":" + string(reasonJson) + "}")
+func (this *Session) Disconnect(reason ...string) {
+	reasonJson, _ := json.Marshal(reason[0])
+	reason[0] = "{\"text\":" + string(reasonJson) + "}"
+	this.DisconnectJson(reason...)
 }
 
-func (this *Session) DisconnectJson(json string) {
+func (this *Session) DisconnectJson(args ...string) {
+	json := args[0]
+	fmt.Println("Json message is " + json)
+	if len(args) == 2 && this.server.regex.MatchString(json) {
+		servers := this.server.router.Route(this.serverAddress)
+		activeServers := []string{}
+		currentServer := args[1]
+		fmt.Println("Attempting to reroute user from server " + currentServer)
+		for _, serverName := range servers {
+			if serverName == currentServer || !this.server.connect.HasServer(serverName) {
+				continue
+			}
+			activeServers = append(activeServers, serverName)
+		}
+		fmt.Printf("There are %d servers to connect to.", len(activeServers))
+		if len(activeServers) >= 1 {
+			serverName := activeServers[RandomInt(len(activeServers))]
+			server := this.server.connect.Server(serverName)
+			fmt.Printf(" Out of these, connecting to " + serverName)
+			if server != nil {
+				this.Redirect(server)
+				return
+			}
+		}
+	} else {
+		fmt.Println("Args length 1")
+	}
 	if this.protocol != nil {
 		registry := this.pipeline.Get("registry")
 		if registry == this.protocol.LoginServerCodec {
@@ -303,6 +330,13 @@ func (this *Session) handlePacket(packet packet.Packet) (err error) {
 			} else {
 				this.serverAddress = this.rawServerAddress[:idx]
 			}
+			/*
+				TCPShield Support
+			*/
+			// Pending license approval
+			/*
+				End TCPShield Support
+			*/
 			this.serverAddress = strings.TrimSuffix(this.serverAddress, ".")
 			this.protocol = sessionVersionTable.ById(this.protocolVersion)
 			if handshakePacket.State == 1 {

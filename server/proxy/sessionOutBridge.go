@@ -147,13 +147,13 @@ func (this *SessionOutBridge) handlePacket(packet packet.Packet) (err error) {
 			this.EnsureCompression()
 			this.pipeline.Replace("registry", this.protocol.PlayClientCodec)
 		} else if packet.Id() == this.protocol.IdMap.PacketClientLoginDisconnect {
-			this.session.DisconnectJson(packet.(*minecraft.PacketClientLoginDisconnect).Json)
+			this.session.DisconnectJson(packet.(*minecraft.PacketClientLoginDisconnect).Json, this.server.Name)
 			this.conn.Close()
 		} else if packet.Id() == this.protocol.IdMap.PacketClientLoginSetCompression {
 			this.SetCompression(packet.(*minecraft.PacketClientLoginSetCompression).Threshold)
 		} else {
 			if this.session.Initializing() {
-				this.session.Disconnect(fmt.Sprintf("Error: Outbound Protocol Mismatch: %d", packet.Id()))
+				this.session.Disconnect(fmt.Sprintf("Error: Outbound Protocol Mismatch: %d", packet.Id()), this.server.Name)
 			}
 			this.conn.Close()
 		}
@@ -294,7 +294,7 @@ func (this *SessionOutBridge) handlePacketConnected(packet packet.Packet) (err e
 		}
 	} else if id == this.protocol.IdMap.PacketClientDisconnect {
 		this.state = STATE_DISCONNECTED
-		this.session.DisconnectJson(packet.(*minecraft.PacketClientDisconnect).Json)
+		this.session.DisconnectJson(packet.(*minecraft.PacketClientDisconnect).Json, this.server.Name)
 		return
 	} else if id == this.protocol.IdMap.PacketClientSetCompression {
 		this.SetCompression(packet.(*minecraft.PacketClientSetCompression).Threshold)
@@ -318,7 +318,7 @@ func (this *SessionOutBridge) ErrorCaught(err error) {
 	}
 	this.disconnectErr = err
 	if this.state != STATE_DISCONNECTED && this.session.outBridge == this {
-		this.session.Disconnect(minecraft.Colorize(this.session.server.localizer.LocaleLostConn()))
+		this.session.Disconnect(minecraft.Colorize(this.session.server.localizer.LocaleLostConn()), this.server.Name)
 	}
 	this.state = STATE_DISCONNECTED
 	this.conn.Close()

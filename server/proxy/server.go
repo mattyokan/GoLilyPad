@@ -11,6 +11,7 @@ import (
 	"net"
 	"path/filepath"
 	"plugin"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -27,6 +28,7 @@ type Server struct {
 	maxPlayers     *uint16
 	syncMaxPlayers *bool
 	authenticate   *bool
+	regex          *regexp.Regexp
 	router         Router
 	localizer      Localizer
 	connect        *connect.ProxyConnect
@@ -34,7 +36,7 @@ type Server struct {
 	publicKey      []byte
 }
 
-func NewServer(bind *string, motd *string, maxPlayers *uint16, syncMaxPlayers *bool, authenticate *bool, router Router, localizer Localizer, connect *connect.ProxyConnect) (this *Server, err error) {
+func NewServer(bind *string, motd *string, maxPlayers *uint16, syncMaxPlayers *bool, authenticate *bool, kickRegex *string, router Router, localizer Localizer, connect *connect.ProxyConnect) (this *Server, err error) {
 	this = new(Server)
 	this.sessionRegistry = NewSessionRegistry()
 	this.apiContext = NewAPIContext(this)
@@ -44,6 +46,7 @@ func NewServer(bind *string, motd *string, maxPlayers *uint16, syncMaxPlayers *b
 	this.maxPlayers = maxPlayers
 	this.syncMaxPlayers = syncMaxPlayers
 	this.authenticate = authenticate
+	this.regex = regexp.MustCompile(*kickRegex)
 	this.router = router
 	this.localizer = localizer
 	this.connect = connect
